@@ -1,6 +1,8 @@
 package neatgo
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Genome ...
 type Genome struct {
@@ -41,10 +43,10 @@ func (o *Genome) init() {
 }
 func (o *Genome) nextGeneration(n int) {
 	o.mutateWeight(n)
-	if NeatRandom(0, 1) < float64(n+1)/10*0.2 {
+	if NeatRandom(0, 1) < float64(n+1)/float64(o.population.genomeNumber) {
 		o.addNode()
 	}
-	if NeatRandom(0, 1) < float64(n+1)/10*0.2 {
+	if NeatRandom(0, 1) < float64(n+1)/float64(o.population.genomeNumber) {
 		o.addConnection()
 	}
 }
@@ -52,7 +54,7 @@ func (o *Genome) mutateWeight(n int) {
 	for i := 0; i < len(o.Connections); i++ {
 		if NeatRandom(0, 1) < 0.001 {
 			o.Connections[i].Weight = NeatRandom(-1, 1)
-		} else if NeatRandom(0, 1) < float64(n+1)/10*0.2 {
+		} else if NeatRandom(0, 1) < float64(n+1)/float64(o.population.genomeNumber) {
 			o.Connections[i].Weight += NeatRandom(-1, 1) * float64(n+1)
 		}
 	}
@@ -64,17 +66,17 @@ func (o *Genome) crossover(b *Genome) *Genome {
 				continue
 			}
 
-			if !o.Connections[n].Enabled || !b.Connections[n].Enabled {
+			if !o.Connections[m].Enabled || !b.Connections[n].Enabled {
 				if NeatRandom(0, 1) < 0.75 {
-					o.Connections[n].Enabled = false
+					o.Connections[m].Enabled = false
 					b.Connections[n].Enabled = false
 				}
 			}
 
 			if NeatRandom(0, 1) < 0.5 {
 				x := b.Connections[n].Weight
-				o.Connections[n].Weight = b.Connections[n].Weight
-				b.Connections[n].Weight = x
+				b.Connections[n].Weight = o.Connections[m].Weight
+				o.Connections[m].Weight = x
 			}
 		}
 	}
@@ -111,13 +113,17 @@ func (o *Genome) addConnection() {
 			}
 
 			found = true
-			o.Connections = append(o.Connections, &Connection{
+			cc := &Connection{
 				In:         a,
 				Out:        b,
 				Weight:     NeatRandom(-1, 1),
 				Enabled:    true,
 				Innovation: o.population.nextInnovationID,
-			})
+			}
+			if a > b {
+				cc.In, cc.Out = b, a
+			}
+			o.Connections = append(o.Connections, cc)
 			o.population.nextInnovationID++
 			break
 		}
@@ -157,7 +163,18 @@ func (o *Genome) addNode() {
 
 // ToJSON ...
 func (o *Genome) ToJSON() string {
-	bs, _ := json.Marshal(o)
+	tmp := o.clone()
+	innov := int64(0)
+	connections := []*Connection{}
+	for _, v := range tmp.Connections {
+		if v.Enabled {
+			v.Innovation = innov
+			connections = append(connections, v)
+			innov++
+		}
+	}
+	tmp.Connections = connections
+	bs, _ := json.Marshal(tmp)
 	return string(bs)
 }
 
@@ -196,6 +213,15 @@ func (s Genomes) Len() int {
 }
 
 func (s Genomes) Less(i, j int) bool {
+	if s[i].Fitness == s[j].Fitness {
+		if s[i].NextNodeID == s[j].NextNodeID {
+			if len(s[i].Connections) == len(s[j].Connections) {
+				return NeatRandom(0, 1) < 0.5
+			}
+			return len(s[i].Connections) < len(s[j].Connections)
+		}
+		return s[i].NextNodeID < s[j].NextNodeID
+	}
 	return s[i].Fitness < s[j].Fitness
 }
 

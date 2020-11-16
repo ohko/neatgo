@@ -1,20 +1,20 @@
 ```
 generation:0 nodes:2 connections:2 fitness:0.0000000000000000
-generation:10 nodes:2 connections:2 fitness:2.9929707489565258
-generation:20 nodes:3 connections:5 fitness:2.9975066220965290
-generation:30 nodes:4 connections:7 fitness:2.9978722138660974
-generation:40 nodes:4 connections:8 fitness:3.0012799540916415
-generation:50 nodes:4 connections:9 fitness:3.2425296535718178
-generation:60 nodes:4 connections:9 fitness:3.4935678041790053
-generation:70 nodes:4 connections:9 fitness:3.4999888422457186
-generation:80 nodes:6 connections:14 fitness:3.5230698096031889
-generation:90 nodes:9 connections:23 fitness:3.9999882211407867
-generation:100 nodes:10 connections:26 fitness:3.9999999999797025
-generation:110 nodes:10 connections:27 fitness:3.9999999999992211
-
-nodes:11 connections:29 fitness:4.0000000000000000
-[0.000000 0.000000] => [0.000000] ~ [0.0000000057131447]
-[0.000000 1.000000] => [1.000000] ~ [0.9999999993960496]
-[1.000000 0.000000] => [1.000000] ~ [0.9999999872894340]
-[1.000000 1.000000] => [0.000000] ~ [0.0000000006938017]
+generation:1 nodes:2 connections:2 fitness:2.9992291692563371
+generation:2 nodes:2 connections:2 fitness:2.9992291692563371
+generation:3 nodes:3 connections:5 fitness:2.9996924364475772
+generation:4 nodes:3 connections:5 fitness:3.0048846916861987
+generation:5 nodes:3 connections:5 fitness:3.0049239834097232
+generation:6 nodes:4 connections:8 fitness:3.2773652819587302
+generation:7 nodes:4 connections:9 fitness:3.4999924728001508
+generation:8 nodes:4 connections:8 fitness:3.4999999999999289
+generation:9 nodes:5 connections:12 fitness:3.5000002892880286
+generation:10 nodes:5 connections:12 fitness:3.5000009151130884
+generation:11 nodes:6 connections:16 fitness:3.5205909315394850
+generation:12 nodes:7 connections:19 fitness:3.9999999998442273
+nodes:7 connections:20 fitness:4.0000000000000000
+[0 0] => [0] ~ [0.0000000000000000]
+[0 1] => [1] ~ [0.9999999999999998]
+[1 0] => [1] ~ [1.0000000000000000]
+[1 1] => [0] ~ [0.0000000000000000]
 ```
