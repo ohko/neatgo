@@ -2,11 +2,12 @@ package neatgo
 
 import (
 	"encoding/json"
+	"math"
 )
 
 // Genome ...
 type Genome struct {
-	population  *Population
+	Population  *Population `json:"-"`
 	Nodes       map[int]*Node
 	Connections []*Connection
 	NextNodeID  int
@@ -15,47 +16,49 @@ type Genome struct {
 
 // NewGenome ...
 func NewGenome(population *Population) (*Genome, error) {
-	return &Genome{population: population}, nil
+	return &Genome{Population: population}, nil
 }
 
 func (o *Genome) init() {
 	o.Nodes = make(map[int]*Node)
-	for i := 0; i < o.population.inputNumber; i++ {
+	for i := 0; i < o.Population.inputNumber; i++ {
 		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeInput, Value: NeatRandom(-1, 1)}
 		o.NextNodeID++
 	}
-	for j := 0; j < o.population.outputNumber; j++ {
+	for j := 0; j < o.Population.outputNumber; j++ {
 		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeOutput, Value: 0}
 
-		for i := 0; i < o.population.inputNumber; i++ {
-			o.Connections = append(o.Connections, &Connection{
-				In:         o.Nodes[i].Index,
-				Out:        o.NextNodeID,
-				Weight:     NeatRandom(-1, 1),
-				Enabled:    true,
-				Innovation: o.population.nextInnovationID,
-			})
-			o.population.nextInnovationID++
-		}
+		// for i := 0; i < o.Population.inputNumber; i++ {
+		o.Connections = append(o.Connections, &Connection{
+			// In:         o.Nodes[i].Index,
+			In:         RandIntn(0, o.Population.inputNumber-1),
+			Out:        o.NextNodeID,
+			Weight:     NeatRandom(-1, 1),
+			Enabled:    true,
+			Innovation: o.Population.nextInnovationID,
+		})
+		o.Population.nextInnovationID++
+		// }
 
 		o.NextNodeID++
 	}
 }
-func (o *Genome) nextGeneration(n int) {
-	o.mutateWeight(n)
-	if NeatRandom(0, 1) < float64(n+1)/float64(o.population.genomeNumber) {
+func (o *Genome) nextGeneration(n int, stdev float64) {
+	o.mutateWeight(n, stdev)
+	if NeatRandom(0, 1) < float64(n+1)/float64(o.Population.genomeNumber) {
 		o.addNode()
 	}
-	if NeatRandom(0, 1) < float64(n+1)/float64(o.population.genomeNumber) {
+	if NeatRandom(0, 1) < float64(n+1)/float64(o.Population.genomeNumber) {
+		o.removeNode()
+	}
+	if NeatRandom(0, 1) < float64(n+1)/float64(o.Population.genomeNumber) {
 		o.addConnection()
 	}
 }
-func (o *Genome) mutateWeight(n int) {
+func (o *Genome) mutateWeight(n int, stdev float64) {
 	for i := 0; i < len(o.Connections); i++ {
-		if NeatRandom(0, 1) < 0.001 {
-			o.Connections[i].Weight = NeatRandom(-1, 1)
-		} else if NeatRandom(0, 1) < float64(n+1)/float64(o.population.genomeNumber) {
-			o.Connections[i].Weight += NeatRandom(-1, 1) * float64(n+1)
+		if NeatRandom(0, 1) < float64(n+1)/float64(o.Population.genomeNumber) {
+			o.Connections[i].Weight += NeatRandom(-1, 1) * math.Min(float64(n+1), 10)
 		}
 	}
 }
@@ -84,81 +87,141 @@ func (o *Genome) crossover(b *Genome) *Genome {
 	return o
 }
 func (o *Genome) addConnection() {
-	found := false
+	ins, outs := []int{}, []int{}
 	for a := range o.Nodes {
-		if found {
+		if o.Nodes[a].Type != NodeTypeOutput {
+			ins = append(ins, a)
+		}
+		if o.Nodes[a].Type != NodeTypeInput {
+			outs = append(outs, a)
+		}
+	}
+
+	index := ins[RandIntn(0, len(ins)-1)]
+	for _, v := range outs {
+		if v <= index {
+			continue
+		}
+		has := false
+		for k, c := range o.Connections {
+			if c.In == index && c.Out == v {
+				has = true
+				o.Connections[k].Enabled = true
+				break
+			}
+		}
+		if has {
 			break
 		}
-		if o.Nodes[a].Type == NodeTypeOutput {
+
+		cc := &Connection{
+			In:         index,
+			Out:        v,
+			Weight:     NeatRandom(-1, 1),
+			Enabled:    true,
+			Innovation: o.Population.nextInnovationID,
+		}
+		o.Connections = append(o.Connections, cc)
+		o.Population.nextInnovationID++
+		break
+	}
+}
+func (o *Genome) addNode() {
+	outs := []*Connection{}
+	for a := range o.Connections {
+		if _, ok := o.Nodes[o.Connections[a].Out]; !ok {
+			continue
+		}
+		if o.Nodes[o.Connections[a].Out].Type == NodeTypeOutput {
+			outs = append(outs, o.Connections[a])
+		}
+	}
+
+	for i := range o.Nodes {
+		if o.Nodes[i].Type != NodeTypeOutput {
 			continue
 		}
 
-		for b := range o.Nodes {
-			if found {
-				break
-			}
-			if a == b || o.Nodes[b].Type == NodeTypeInput {
-				continue
-			}
+		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeHidden, Value: 0}
 
+		c := RandIntn(0, len(outs)-1)
+		outs[c].Enabled = false
+		o.Connections = append(o.Connections, &Connection{
+			In:         outs[c].In,
+			Out:        o.NextNodeID,
+			Weight:     NeatRandom(-1, 1),
+			Enabled:    true,
+			Innovation: o.Population.nextInnovationID,
+		})
+		o.Population.nextInnovationID++
+		o.Connections = append(o.Connections, &Connection{
+			In:         o.NextNodeID,
+			Out:        outs[c].Out,
+			Weight:     NeatRandom(-1, 1),
+			Enabled:    true,
+			Innovation: o.Population.nextInnovationID,
+		})
+		o.Population.nextInnovationID++
+
+		o.NextNodeID++
+		break
+	}
+}
+func (o *Genome) removeNode() {
+	indexs := []int{}
+	for i := range o.Nodes {
+		if o.Nodes[i].Type != NodeTypeHidden {
+			continue
+		}
+		indexs = append(indexs, i)
+	}
+	if len(indexs) == 0 {
+		return
+	}
+	removeIndex := indexs[RandIntn(0, len(indexs)-1)]
+
+	ins, outs := []int{}, []int{}
+	for k := 0; k < len(o.Connections); k++ {
+		if o.Connections[k].Out == removeIndex {
+			ins = append(ins, o.Connections[k].In)
+			o.Connections = append(o.Connections[:k], o.Connections[k+1:]...)
+		}
+	}
+	if len(ins) == 0 {
+		return
+	}
+	for k := 0; k < len(o.Connections); k++ {
+		if o.Connections[k].In == removeIndex {
+			outs = append(outs, o.Connections[k].Out)
+			o.Connections = append(o.Connections[:k], o.Connections[k+1:]...)
+		}
+	}
+
+	for _, j := range outs {
+		for _, i := range ins {
 			has := false
-			for _, c := range o.Connections {
-				if (c.In == a && c.Out == b) || (c.In == b && c.Out == a) {
+			for k, c := range o.Connections {
+				if c.In == i && c.Out == j {
 					has = true
+					o.Connections[k].Enabled = true
 					break
 				}
 			}
 			if has {
 				continue
 			}
-
-			found = true
-			cc := &Connection{
-				In:         a,
-				Out:        b,
+			o.Connections = append(o.Connections, &Connection{
+				In:         i,
+				Out:        j,
 				Weight:     NeatRandom(-1, 1),
 				Enabled:    true,
-				Innovation: o.population.nextInnovationID,
-			}
-			if a > b {
-				cc.In, cc.Out = b, a
-			}
-			o.Connections = append(o.Connections, cc)
-			o.population.nextInnovationID++
-			break
+				Innovation: o.Population.nextInnovationID,
+			})
+			o.Population.nextInnovationID++
 		}
 	}
-}
-func (o *Genome) addNode() {
-	for i := range o.Nodes {
-		if o.Nodes[i].Type == NodeTypeInput {
-			continue
-		}
 
-		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeHidden, Value: 0}
-
-		c := RandIntn(0, len(o.Connections)-1)
-		o.Connections[c].Enabled = false
-		o.Connections = append(o.Connections, &Connection{
-			In:         o.Connections[c].In,
-			Out:        o.NextNodeID,
-			Weight:     NeatRandom(-1, 1),
-			Enabled:    true,
-			Innovation: o.population.nextInnovationID,
-		})
-		o.population.nextInnovationID++
-		o.Connections = append(o.Connections, &Connection{
-			In:         o.NextNodeID,
-			Out:        o.Connections[c].Out,
-			Weight:     NeatRandom(-1, 1),
-			Enabled:    true,
-			Innovation: o.population.nextInnovationID,
-		})
-		o.population.nextInnovationID++
-
-		o.NextNodeID++
-		break
-	}
+	delete(o.Nodes, removeIndex)
 }
 
 // ToJSON ...
@@ -167,11 +230,9 @@ func (o *Genome) ToJSON() string {
 	innov := int64(0)
 	connections := []*Connection{}
 	for _, v := range tmp.Connections {
-		if v.Enabled {
-			v.Innovation = innov
-			connections = append(connections, v)
-			innov++
-		}
+		v.Innovation = innov
+		connections = append(connections, v)
+		innov++
 	}
 	tmp.Connections = connections
 	bs, _ := json.Marshal(tmp)
@@ -184,7 +245,7 @@ func (o *Genome) LoadJSON(js string) error {
 }
 func (o *Genome) clone() *Genome {
 	n := &Genome{
-		population:  o.population,
+		Population:  o.Population,
 		Nodes:       map[int]*Node{},
 		Connections: []*Connection{},
 		NextNodeID:  o.NextNodeID,
@@ -205,6 +266,26 @@ func (o *Genome) clone() *Genome {
 	return n
 }
 
+// GetActiveNodeNumber ...
+func (o *Genome) GetActiveNodeNumber() int {
+	nn := 0
+	for range o.Nodes {
+		nn++
+	}
+	return nn
+}
+
+// GetActiveConnectionNumber ...
+func (o *Genome) GetActiveConnectionNumber() int {
+	cn := 0
+	for _, c := range o.Connections {
+		if c.Enabled {
+			cn++
+		}
+	}
+	return cn
+}
+
 // Genomes ...
 type Genomes []*Genome
 
@@ -214,13 +295,15 @@ func (s Genomes) Len() int {
 
 func (s Genomes) Less(i, j int) bool {
 	if s[i].Fitness == s[j].Fitness {
-		if s[i].NextNodeID == s[j].NextNodeID {
-			if len(s[i].Connections) == len(s[j].Connections) {
+		aid, bid := s[i].GetActiveNodeNumber(), s[j].GetActiveNodeNumber()
+		if aid == bid {
+			c1, c2 := s[i].GetActiveConnectionNumber(), s[j].GetActiveConnectionNumber()
+			if c1 == c2 {
 				return NeatRandom(0, 1) < 0.5
 			}
-			return len(s[i].Connections) < len(s[j].Connections)
+			return c1 < c2
 		}
-		return s[i].NextNodeID < s[j].NextNodeID
+		return aid < s[j].NextNodeID
 	}
 	return s[i].Fitness < s[j].Fitness
 }

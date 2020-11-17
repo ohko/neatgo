@@ -1,20 +1,13 @@
 ```
-generation:0 nodes:2 connections:2 fitness:0.0000000000000000
-generation:1 nodes:2 connections:2 fitness:2.9992291692563371
-generation:2 nodes:2 connections:2 fitness:2.9992291692563371
-generation:3 nodes:3 connections:5 fitness:2.9996924364475772
-generation:4 nodes:3 connections:5 fitness:3.0048846916861987
-generation:5 nodes:3 connections:5 fitness:3.0049239834097232
-generation:6 nodes:4 connections:8 fitness:3.2773652819587302
-generation:7 nodes:4 connections:9 fitness:3.4999924728001508
-generation:8 nodes:4 connections:8 fitness:3.4999999999999289
-generation:9 nodes:5 connections:12 fitness:3.5000002892880286
-generation:10 nodes:5 connections:12 fitness:3.5000009151130884
-generation:11 nodes:6 connections:16 fitness:3.5205909315394850
-generation:12 nodes:7 connections:19 fitness:3.9999999998442273
-nodes:7 connections:20 fitness:4.0000000000000000
-[0 0] => [0] ~ [0.0000000000000000]
-[0 1] => [1] ~ [0.9999999999999998]
-[1 0] => [1] ~ [1.0000000000000000]
-[1 1] => [0] ~ [0.0000000000000000]
+generation:0 nodes:3/3 connections:1/1 fitness:0.0000000000000000
+generation:10 nodes:5/7 connections:5/7 fitness:3.4910109719814506
+generation:20 nodes:5/9 connections:7/8 fitness:3.9980922753171719
+generation:30 nodes:6/10 connections:10/11 fitness:3.9999831062091622
+generation:40 nodes:6/11 connections:9/11 fitness:3.9999999776110977
+generation:50 nodes:7/14 connections:11/13 fitness:3.9999999999827254
+nodes:11 connections:19 fitness:4.0000000000000000
+[0 0] => [0] ~ [0.0000000000092225]
+[0 1] => [1] ~ [0.9999999941787301]
+[1 0] => [1] ~ [0.9999999973851761]
+[1 1] => [0] ~ [0.0000000095194561]
 ```

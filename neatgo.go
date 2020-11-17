@@ -1,8 +1,13 @@
 package neatgo
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -23,6 +28,9 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 	// hidden
 	for n := 0; n < genome.NextNodeID; n++ {
+		if _, ok := genome.Nodes[n]; !ok {
+			continue
+		}
 		if genome.Nodes[n].Type != NodeTypeHidden {
 			continue
 		}
@@ -30,6 +38,16 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 		for _, c := range genome.Connections {
 			if c.Enabled && c.Out == n {
+				if _, ok := genome.Nodes[c.In]; !ok {
+					continue
+				}
+				if _, ok := genome.Nodes[c.Out]; !ok {
+					continue
+				}
+				if genome.Nodes[c.In] == nil || genome.Nodes[c.Out] == nil {
+					fmt.Println(genome.Nodes[c.In])
+					fmt.Println(genome.Nodes[c.Out])
+				}
 				genome.Nodes[c.Out].Value += genome.Nodes[c.In].Value * c.Weight
 			}
 		}
@@ -39,6 +57,9 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 	// output
 	for n := 0; n < genome.NextNodeID; n++ {
+		if _, ok := genome.Nodes[n]; !ok {
+			continue
+		}
 		if genome.Nodes[n].Type != NodeTypeOutput {
 			continue
 		}
@@ -46,6 +67,12 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 		for _, c := range genome.Connections {
 			if c.Enabled && c.Out == n {
+				if _, ok := genome.Nodes[c.In]; !ok {
+					continue
+				}
+				if _, ok := genome.Nodes[c.Out]; !ok {
+					continue
+				}
 				genome.Nodes[c.Out].Value += genome.Nodes[c.In].Value * c.Weight
 			}
 		}
@@ -83,4 +110,54 @@ func RandIntn(min, max int) int {
 	}
 	return rand.Intn(max+1-min) + min
 	// return mrand.New(mrand.NewSource(time.Now().UnixNano())).Intn((max-min)+1) + min
+}
+
+func visualization(genome *Genome, file string) {
+	const vTpl = `
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="echarts.min.js"></script>
+</head>
+
+<body>
+	<div id="main" style="border:1px solid #CCC;width: 800px;height:800px;"></div>
+	<div>{JSON}</div>
+    <script type="text/javascript">
+        var myChart = echarts.init(document.getElementById('main'));
+
+        var option = {
+            series: [{
+                type: 'graph', layout: 'force', animation: false, label: { show: true }, edgeSymbol: ['', 'arrow'], force: { edgeLength: 100, repulsion: 1000 },
+                data: {DATA},
+                edges: {EDGES},
+            }]
+        };
+
+        myChart.setOption(option);
+    </script>
+</body>
+
+</html>`
+	itemColors := map[string]string{NodeTypeInput: "red", NodeTypeHidden: "pink", NodeTypeOutput: "blue"}
+	lineColors := map[bool]string{true: "black", false: "gray"}
+	lineWidths := map[bool]int{true: 2, false: 1}
+	datas, edges := []interface{}{}, []interface{}{}
+	for k, v := range genome.Nodes {
+		itemStyle := map[string]interface{}{"color": itemColors[v.Type]}
+		datas = append(datas, map[string]interface{}{"name": strconv.Itoa(k), "symbolSize": 20, "draggable": true, "itemStyle": itemStyle})
+	}
+	for _, v := range genome.Connections {
+		lineStyle := map[string]interface{}{"color": lineColors[v.Enabled], "width": lineWidths[v.Enabled]}
+		edges = append(edges, map[string]interface{}{"source": strconv.Itoa(v.In), "target": strconv.Itoa(v.Out), "lineStyle": lineStyle})
+	}
+	bs, _ := json.Marshal(datas)
+	html := strings.Replace(vTpl, "{DATA}", string(bs), 1)
+	bs, _ = json.Marshal(edges)
+	html = strings.Replace(html, "{EDGES}", string(bs), 1)
+	html = strings.Replace(html, "{JSON}", genome.ToJSON(), 1)
+	ioutil.WriteFile(file, []byte(html), 0644)
 }

@@ -32,7 +32,9 @@ func NewPopulation(inputNumber, outputNumber, genomeNumber int, fitnessThreshold
 	}
 	return o, nil
 }
-func (o *Population) run(fitnessFunction FitnessFunction, generations int, initJSON string) *Genome {
+
+// Run ...
+func (o *Population) Run(fitnessFunction FitnessFunction, generations int, initJSON string) *Genome {
 	o.createGenome(initJSON)
 	if generations < 0 {
 		generations = math.MaxInt32
@@ -40,7 +42,7 @@ func (o *Population) run(fitnessFunction FitnessFunction, generations int, initJ
 	for n := 0; n < generations; n++ {
 		fitnessFunction(o.genomes, n, o)
 
-		o.sortWinners(1)
+		o.sortWinners(0)
 		if n+1 == generations {
 			break
 		}
@@ -77,6 +79,13 @@ func (o *Population) sortWinners(n int) {
 	o.Winners = o.Winners[:4]
 }
 func (o *Population) next() {
+	sum := 0.0
+	for i := range o.genomes {
+		sum += math.Pow(o.fitnessThreshold-o.genomes[i].Fitness, 2)
+	}
+	stdev := math.Sqrt(sum / (float64(len(o.genomes))))
+	minStdev := stdev / o.fitnessThreshold
+
 	var a, b *Genome
 	for i := range o.genomes {
 		if i < 4 {
@@ -90,6 +99,6 @@ func (o *Population) next() {
 		} else {
 			o.genomes[i] = o.Winners[RandIntn(0, 3)].clone()
 		}
-		o.genomes[i].nextGeneration(i)
+		o.genomes[i].nextGeneration(i, minStdev)
 	}
 }
