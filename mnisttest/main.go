@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"neatgo"
 	"neatgo/mnist"
 	"runtime"
@@ -28,6 +29,7 @@ func main() {
 
 	jsonFile := "neatgo_mnist.json"
 	pop, _ := neatgo.NewPopulation(28*28, 10, *g, 0.99)
+	// pop, _ := neatgo.NewPopulation(28*28, 10, *g, float64(*n)*0.01-0.001)
 
 	if *t {
 		resultChk(pop, jsonFile)
@@ -69,7 +71,10 @@ func main() {
 
 	maxFitness := 0.0
 	fitnessFunction := func(genomes []*neatgo.Genome, generation int, population *neatgo.Population) {
-		fmt.Printf("generation:%d nodes:%d/%d connections:%d/%d fitness:%.3f%%\n", generation, genomes[0].GetActiveNodeNumber(), genomes[0].NextNodeID, genomes[0].GetActiveConnectionNumber(), len(genomes[0].Connections), genomes[0].Fitness*100)
+		if generation%10 == 0 {
+			fmt.Println()
+		}
+		fmt.Printf("generation:%d nodes:%d/%d connections:%d/%d fitness:%.3f%%\r", generation, genomes[0].GetActiveNodeNumber(), genomes[0].NextNodeID, genomes[0].GetActiveConnectionNumber(), len(genomes[0].Connections), genomes[0].Fitness*100)
 		// save
 		if genomes[0].Fitness > maxFitness+0.001 {
 			if maxFitness != 0 {
@@ -107,7 +112,7 @@ func main() {
 	}
 
 	// check
-	resultChk(pop, jsonFile)
+	// resultChk(pop, jsonFile)
 }
 
 func outputChk(genome *neatgo.Genome, inputs []float64, want int) bool {
@@ -127,9 +132,31 @@ func outputChk(genome *neatgo.Genome, inputs []float64, want int) bool {
 	return false
 }
 
+func small(img [][]uint8) [][]uint8 {
+	out := [][]uint8{}
+	w, h := 2, 2
+	for y := 0; y < len(img); y += h {
+		row := []uint8{}
+		for x := 0; x < len(img[0]); x += w {
+			dot := uint8(0)
+			sum := 0.0
+			for a := 0; a < h; a++ {
+				for b := 0; b < w; b++ {
+					sum += math.Pow(float64(img[y+a][x+b]), 2)
+				}
+			}
+			dot = uint8(math.Sqrt(sum / float64(w*h)))
+			row = append(row, dot)
+		}
+		out = append(out, row)
+	}
+	return out
+}
+
 func getBits(img [][]uint8) []float64 {
 	bits := make([]float64, 28*28)
 	pos := 0
+	// img = small(img)
 	for _, vv := range img {
 		for _, vvv := range vv {
 			bits[pos] = float64(vvv) / 0xff

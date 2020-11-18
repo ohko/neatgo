@@ -9,7 +9,7 @@ import (
 
 // go test neatgo -run TestXOR -v -count=1
 func TestXOR(t *testing.T) {
-	fmt.Print("\033c")
+	// fmt.Print("\033c")
 
 	data := []map[string][]float64{
 		{"inputs": {0, 0}, "outputs": {0}},

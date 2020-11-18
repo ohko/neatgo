@@ -11,5 +11,5 @@ const (
 type Node struct {
 	Index int
 	Type  string
-	Value float64
+	Value float64 `json:"-"`
 }

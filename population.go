@@ -70,21 +70,19 @@ func (o *Population) createGenome(initJSON string) {
 	}
 }
 func (o *Population) sortWinners(n int) {
-	if len(o.Winners) > n {
-		o.Winners = o.Winners[:n]
-	}
+	o.Winners = o.Winners[:n]
 	sort.Sort(sort.Reverse(o.genomes))
 	o.Winners = append(o.Winners, o.genomes[:4]...)
 	sort.Sort(sort.Reverse(o.Winners))
 	o.Winners = o.Winners[:4]
 }
 func (o *Population) next() {
-	sum := 0.0
-	for i := range o.genomes {
-		sum += math.Pow(o.fitnessThreshold-o.genomes[i].Fitness, 2)
-	}
-	stdev := math.Sqrt(sum / (float64(len(o.genomes))))
-	minStdev := stdev / o.fitnessThreshold
+	// sum := 0.0
+	// for i := range o.genomes {
+	// 	sum += math.Pow(o.fitnessThreshold-o.genomes[i].Fitness, 2)
+	// }
+	// stdev := math.Sqrt(sum / (float64(len(o.genomes))))
+	// minStdev := stdev / o.fitnessThreshold
 
 	var a, b *Genome
 	for i := range o.genomes {
@@ -99,6 +97,6 @@ func (o *Population) next() {
 		} else {
 			o.genomes[i] = o.Winners[RandIntn(0, 3)].clone()
 		}
-		o.genomes[i].nextGeneration(i, minStdev)
+		o.genomes[i].nextGeneration(i, 0)
 	}
 }
