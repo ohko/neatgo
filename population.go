@@ -44,10 +44,11 @@ func (o *Population) Run(fitnessFunction FitnessFunction, generations int, initJ
 	if generations < 0 {
 		generations = math.MaxInt32
 	}
+	dis, last, top := 0, 0.0, 0
 	for n := 0; n < generations; n++ {
 		fitnessFunction(o.genomes, n, o)
 
-		o.sortWinners(o.Options.KeepWinner)
+		o.sortWinners(top)
 		if n+1 == generations {
 			break
 		}
@@ -55,6 +56,16 @@ func (o *Population) Run(fitnessFunction FitnessFunction, generations int, initJ
 			break
 		}
 
+		if last != o.Winners[0].Fitness {
+			top = o.Options.KeepWinner
+			dis = 0
+		} else {
+			dis++
+		}
+		if dis > 5 {
+			top = 0
+		}
+		last = o.Winners[0].Fitness
 		o.next()
 	}
 

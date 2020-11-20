@@ -29,15 +29,14 @@ func main() {
 
 	jsonFile := "neatgo_mnist.json"
 	pop, _ := neatgo.NewPopulation(28/2*28/2, 10, *g, 0.99, &neatgo.Options{
-		KeepWinner:       0,
-		AddNode:          0.5,
-		RemoveNode:       0.5,
-		AddConnection:    0.5,
-		RemoveConnection: 0.5,
-		MutateWeight:     0.5,
+		KeepWinner:       1,
+		AddNode:          0.2,
+		RemoveNode:       0.2,
+		AddConnection:    0.2,
+		RemoveConnection: 0.2,
+		MutateWeight:     0.2,
 		AllConnection:    true,
 	})
-	// pop, _ := neatgo.NewPopulation(28*28, 10, *g, float64(*n)*0.01-0.001)
 
 	if *t {
 		resultChk(pop, jsonFile)
@@ -91,10 +90,10 @@ func main() {
 
 	maxFitness := 0.0
 	fitnessFunction := func(genomes []*neatgo.Genome, generation int, population *neatgo.Population) {
-		if generation%10 == 0 {
+		fmt.Printf("generation:%d nodes:%d/%d connections:%d/%d fitness:%.3f%%\r", generation, genomes[0].GetActiveNodeNumber(), genomes[0].NextNodeID, genomes[0].GetActiveConnectionNumber(), len(genomes[0].Connections), genomes[0].Fitness*100)
+		if generation%100 == 0 {
 			fmt.Println()
 		}
-		fmt.Printf("generation:%d nodes:%d/%d connections:%d/%d fitness:%.3f%%\r", generation, genomes[0].GetActiveNodeNumber(), genomes[0].NextNodeID, genomes[0].GetActiveConnectionNumber(), len(genomes[0].Connections), genomes[0].Fitness*100)
 		// save
 		if genomes[0].Fitness > maxFitness+0.001 {
 			if maxFitness != 0 {
@@ -130,9 +129,6 @@ func main() {
 		winners := winner.Population.Winners
 		fmt.Printf("nodes:%d connections:%d fitness:%.3f\n", winners[0].GetActiveNodeNumber(), winners[0].GetActiveConnectionNumber(), winners[0].Fitness)
 	}
-
-	// check
-	// resultChk(pop, jsonFile)
 }
 
 func outputChk(genome *neatgo.Genome, inputs []float64, want int) bool {
@@ -171,6 +167,19 @@ func small(img [][]uint8) [][]uint8 {
 		out = append(out, row)
 	}
 	return out
+}
+
+func preview(img [][]uint8) {
+	for y := 0; y < len(img); y++ {
+		for x := 0; x < len(img[0]); x++ {
+			if img[y][x] > 128 {
+				fmt.Print("1")
+			} else {
+				fmt.Print("0")
+			}
+		}
+		fmt.Println()
+	}
 }
 
 func getBits(img [][]uint8) []float64 {
@@ -222,5 +231,5 @@ func resultChk(pop *neatgo.Population, jsonFile string) {
 		}
 	}
 
-	fmt.Printf("[check]count: %d right: %d (%.3f%%)\n", dataCheck.N, right, float64(right)/float64(dataCheck.N)*100)
+	fmt.Printf("[check]count: %d/%d right: %d (%.3f%%)\n", len(dataCheckSet), dataCheck.N, right, float64(right)/float64(len(dataCheckSet))*100)
 }

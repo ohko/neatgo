@@ -59,14 +59,15 @@ func (o *Genome) nextGeneration(n int, stdev float64) {
 	o.mutateWeight(n, stdev)
 	// r := float64(n+1) / float64(o.Population.genomeNumber)
 	// r1, r2, r3, r4 := r, r, r, r
+	div := math.Max(1, o.Population.Options.AddNode+o.Population.Options.RemoveNode+o.Population.Options.AddConnection+o.Population.Options.RemoveConnection)
 	r, r1, r2, r3, r4 := NeatRandom(0, 1), o.Population.Options.AddNode, o.Population.Options.RemoveNode, o.Population.Options.AddConnection, o.Population.Options.RemoveConnection
-	if r < r1 {
+	if r < r1/div {
 		o.addNode()
-	} else if r < r1+r2 {
+	} else if r < (r1+r2)/div {
 		o.removeNode()
-	} else if r < r1+r2+r3 {
+	} else if r < (r1+r2+r3)/div {
 		o.addConnection()
-	} else if r < r1+r2+r3+r4 {
+	} else if r < (r1+r2+r3+r4)/div {
 		o.removeConnection()
 	}
 }
