@@ -1,14 +1,21 @@
 package neatgo
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"math"
+	"runtime"
 	"sync"
 	"testing"
 )
 
 // go test neatgo -run TestXOR -v -count=1
 func TestXOR(t *testing.T) {
+	flag.Parse()
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	log.SetFlags(log.Lshortfile)
+
 	// fmt.Print("\033c")
 
 	data := []map[string][]float64{
@@ -25,8 +32,8 @@ func TestXOR(t *testing.T) {
 
 		var wg sync.WaitGroup
 
+		wg.Add(len(genomes))
 		for _, genome := range genomes {
-			wg.Add(1)
 			go func(genome *Genome) {
 				genome.Fitness = 4
 				for _, d := range data {
@@ -40,7 +47,7 @@ func TestXOR(t *testing.T) {
 		wg.Wait()
 	}
 
-	pop, _ := NewPopulation(2, 1, 100, 4)
+	pop, _ := NewPopulation(2, 1, 10, 4)
 	winner := pop.Run(fitnessFunction, -1, "")
 	// fmt.Println(winner.ToJSON())
 	// ioutil.WriteFile("neatgo_xor.json", []byte(winner.ToJSON()), 0644)

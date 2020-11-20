@@ -42,7 +42,7 @@ func (o *Population) Run(fitnessFunction FitnessFunction, generations int, initJ
 	for n := 0; n < generations; n++ {
 		fitnessFunction(o.genomes, n, o)
 
-		o.sortWinners(0)
+		o.sortWinners(1)
 		if n+1 == generations {
 			break
 		}
@@ -70,7 +70,9 @@ func (o *Population) createGenome(initJSON string) {
 	}
 }
 func (o *Population) sortWinners(n int) {
-	o.Winners = o.Winners[:n]
+	if len(o.Winners) > n {
+		o.Winners = o.Winners[:n]
+	}
 	sort.Sort(sort.Reverse(o.genomes))
 	o.Winners = append(o.Winners, o.genomes[:4]...)
 	sort.Sort(sort.Reverse(o.Winners))

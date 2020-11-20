@@ -132,7 +132,7 @@ func Visualization(genome *Genome, file string) {
 
         var option = {
             series: [{
-                type: 'graph', layout: 'force', animation: false, label: { show: true }, edgeSymbol: ['', 'arrow'], force: { edgeLength: 100, repulsion: 1000 },
+                type: 'graph', layout: 'force', animation: false, roam: true, label: { show: true }, edgeSymbol: ['', 'arrow'], force: { edgeLength: 100, repulsion: 1000 },
                 data: {DATA},
                 edges: {EDGES},
             }]
