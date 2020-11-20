@@ -30,17 +30,27 @@ func (o *Genome) init() {
 	for j := 0; j < o.Population.outputNumber; j++ {
 		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeOutput, Value: 0}
 
-		// for i := 0; i < o.Population.inputNumber; i++ {
-		o.Connections = append(o.Connections, &Connection{
-			// In: o.Nodes[i].Index,
-			In:         RandIntn(0, o.Population.inputNumber-1),
-			Out:        o.NextNodeID,
-			Weight:     NeatRandom(-1, 1),
-			Enabled:    true,
-			Innovation: o.Population.nextInnovationID,
-		})
-		o.Population.nextInnovationID++
-		// }
+		if o.Population.Options.AllConnection {
+			for i := 0; i < o.Population.inputNumber; i++ {
+				o.Connections = append(o.Connections, &Connection{
+					In:         o.Nodes[i].Index,
+					Out:        o.NextNodeID,
+					Weight:     NeatRandom(-1, 1),
+					Enabled:    true,
+					Innovation: o.Population.nextInnovationID,
+				})
+				o.Population.nextInnovationID++
+			}
+		} else {
+			o.Connections = append(o.Connections, &Connection{
+				In:         RandIntn(0, o.Population.inputNumber-1),
+				Out:        o.NextNodeID,
+				Weight:     NeatRandom(-1, 1),
+				Enabled:    true,
+				Innovation: o.Population.nextInnovationID,
+			})
+			o.Population.nextInnovationID++
+		}
 
 		o.NextNodeID++
 	}
@@ -49,14 +59,14 @@ func (o *Genome) nextGeneration(n int, stdev float64) {
 	o.mutateWeight(n, stdev)
 	// r := float64(n+1) / float64(o.Population.genomeNumber)
 	// r1, r2, r3, r4 := r, r, r, r
-	r1, r2, r3, r4 := 0.2, 0.2, 0.2, 0.2
-	if NeatRandom(0, 1) < r1 {
+	r, r1, r2, r3, r4 := NeatRandom(0, 1), o.Population.Options.AddNode, o.Population.Options.RemoveNode, o.Population.Options.AddConnection, o.Population.Options.RemoveConnection
+	if r < r1 {
 		o.addNode()
-	} else if NeatRandom(0, 1) < r1+r2 {
+	} else if r < r1+r2 {
 		o.removeNode()
-	} else if NeatRandom(0, 1) < r1+r2+r3 {
+	} else if r < r1+r2+r3 {
 		o.addConnection()
-	} else if NeatRandom(0, 1) < r1+r2+r3+r4 {
+	} else if r < r1+r2+r3+r4 {
 		o.removeConnection()
 	}
 }
@@ -64,7 +74,7 @@ func (o *Genome) mutateWeight(n int, stdev float64) {
 	for i := 0; i < len(o.Connections); i++ {
 		if NeatRandom(0, 1) < 0.01 {
 			o.Connections[i].Weight = NeatRandom(-1, 1)
-		} else if NeatRandom(0, 1) < 0.2 { //float64(n+1)/float64(o.Population.genomeNumber) {
+		} else if NeatRandom(0, 1) < o.Population.Options.MutateWeight {
 			o.Connections[i].Weight += NeatRandom(-1, 1) * math.Min(float64(n+1), 10)
 		}
 	}

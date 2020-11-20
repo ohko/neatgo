@@ -11,6 +11,30 @@ import (
 	"time"
 )
 
+// Options ...
+type Options struct {
+	KeepWinner       int
+	AddNode          float64
+	RemoveNode       float64
+	AddConnection    float64
+	RemoveConnection float64
+	MutateWeight     float64
+	AllConnection    bool
+}
+
+// DefaultOptions ...
+func DefaultOptions() *Options {
+	return &Options{
+		KeepWinner:       0,
+		AddNode:          0.2,
+		RemoveNode:       0.2,
+		AddConnection:    0.2,
+		RemoveConnection: 0.2,
+		MutateWeight:     0.2,
+		AllConnection:    true,
+	}
+}
+
 // FitnessFunction ...
 type FitnessFunction func(genomes []*Genome, generation int, population *Population)
 

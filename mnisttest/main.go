@@ -14,7 +14,7 @@ import (
 
 var (
 	t = flag.Bool("c", false, "Check")
-	n = flag.Int("n", 100, "Train number")
+	n = flag.Int("n", 10, "Train count of every number")
 	g = flag.Int("g", 10, "Genome number")
 )
 
@@ -28,7 +28,15 @@ func main() {
 	}
 
 	jsonFile := "neatgo_mnist.json"
-	pop, _ := neatgo.NewPopulation(28*28, 10, *g, 0.99)
+	pop, _ := neatgo.NewPopulation(28/2*28/2, 10, *g, 0.99, &neatgo.Options{
+		KeepWinner:       0,
+		AddNode:          0.5,
+		RemoveNode:       0.5,
+		AddConnection:    0.5,
+		RemoveConnection: 0.5,
+		MutateWeight:     0.5,
+		AllConnection:    true,
+	})
 	// pop, _ := neatgo.NewPopulation(28*28, 10, *g, float64(*n)*0.01-0.001)
 
 	if *t {
@@ -56,17 +64,29 @@ func main() {
 		trainCount = dataTrain.N
 	}
 	if trainCount <= 0 {
-		trainCount = 10
+		trainCount = 1
 	}
 
+	numbers := map[int]int{0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
+
 	dataTrainSet := [][][]float64{}
-	for k, v := range dataTrain.Data {
-		if k >= trainCount {
-			break
-		}
+	for _, v := range dataTrain.Data {
 		bits := getBits(v.Image)
 		want := float64(v.Digit)
+		if numbers[v.Digit] >= trainCount {
+			continue
+		}
+		numbers[v.Digit]++
 		dataTrainSet = append(dataTrainSet, [][]float64{bits, {want}})
+
+		sum := 0
+		for _, n := range numbers {
+			sum += n
+		}
+
+		if sum > trainCount*10 {
+			break
+		}
 	}
 
 	maxFitness := 0.0
@@ -94,7 +114,7 @@ func main() {
 						right++
 					}
 				}
-				genome.Fitness = float64(right) / float64(trainCount)
+				genome.Fitness = float64(right) / float64(trainCount*10)
 
 				wg.Done()
 			}(genome)
@@ -124,7 +144,7 @@ func outputChk(genome *neatgo.Genome, inputs []float64, want int) bool {
 			maxI = ok
 		}
 	}
-	if maxV > 0.8 {
+	if maxV > 0.9 {
 		if want == maxI {
 			return true
 		}
@@ -154,9 +174,9 @@ func small(img [][]uint8) [][]uint8 {
 }
 
 func getBits(img [][]uint8) []float64 {
-	bits := make([]float64, 28*28)
+	bits := make([]float64, 28/2*28/2)
 	pos := 0
-	// img = small(img)
+	img = small(img)
 	for _, vv := range img {
 		for _, vvv := range vv {
 			bits[pos] = float64(vvv) / 0xff

@@ -13,14 +13,18 @@ type Population struct {
 	fitnessThreshold float64
 	nextInnovationID int64
 	Winners          Genomes
+	Options          *Options
 
 	genomes Genomes
 }
 
 // NewPopulation ...
-func NewPopulation(inputNumber, outputNumber, genomeNumber int, fitnessThreshold float64) (*Population, error) {
+func NewPopulation(inputNumber, outputNumber, genomeNumber int, fitnessThreshold float64, options *Options) (*Population, error) {
 	if genomeNumber < 5 {
 		genomeNumber = 5
+	}
+	if options == nil {
+		options = DefaultOptions()
 	}
 	o := &Population{
 		inputNumber:      inputNumber,
@@ -29,6 +33,7 @@ func NewPopulation(inputNumber, outputNumber, genomeNumber int, fitnessThreshold
 		fitnessThreshold: fitnessThreshold,
 		nextInnovationID: 0,
 		Winners:          []*Genome{},
+		Options:          options,
 	}
 	return o, nil
 }
@@ -42,7 +47,7 @@ func (o *Population) Run(fitnessFunction FitnessFunction, generations int, initJ
 	for n := 0; n < generations; n++ {
 		fitnessFunction(o.genomes, n, o)
 
-		o.sortWinners(1)
+		o.sortWinners(o.Options.KeepWinner)
 		if n+1 == generations {
 			break
 		}
