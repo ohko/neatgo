@@ -112,7 +112,8 @@ func RandIntn(min, max int) int {
 	// return mrand.New(mrand.NewSource(time.Now().UnixNano())).Intn((max-min)+1) + min
 }
 
-func visualization(genome *Genome, file string) {
+// Visualization ...
+func Visualization(genome *Genome, file string) {
 	const vTpl = `
 <!DOCTYPE html>
 <html>

@@ -45,7 +45,7 @@ func TestXOR(t *testing.T) {
 	// fmt.Println(winner.ToJSON())
 	// ioutil.WriteFile("neatgo_xor.json", []byte(winner.ToJSON()), 0644)
 
-	visualization(winner, "visualization_xor.html")
+	Visualization(winner, "visualization_xor.html")
 
 	{ // test
 		winners := winner.Population.Winners

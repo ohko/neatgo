@@ -25,8 +25,8 @@ func NewGenome(population *Population) (*Genome, error) {
 }
 
 func (o *Genome) init() {
-	o.MaxNodes = o.Population.inputNumber * 10
-	o.MaxConnections = o.Population.inputNumber * 100
+	// o.MaxNodes = o.Population.inputNumber * 5
+	// o.MaxConnections = o.Population.inputNumber * 10
 	for i := 0; i < o.Population.inputNumber; i++ {
 		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeInput, Value: NeatRandom(-1, 1)}
 		o.NextNodeID++
@@ -63,7 +63,9 @@ func (o *Genome) nextGeneration(n int, stdev float64) {
 }
 func (o *Genome) mutateWeight(n int, stdev float64) {
 	for i := 0; i < len(o.Connections); i++ {
-		if NeatRandom(0, 1) < float64(n+1)/float64(o.Population.genomeNumber) {
+		if NeatRandom(0, 1) < 0.01 {
+			o.Connections[i].Weight = NeatRandom(-1, 1)
+		} else if NeatRandom(0, 1) < float64(n+1)/float64(o.Population.genomeNumber) {
 			o.Connections[i].Weight += NeatRandom(-1, 1) * math.Min(float64(n+1), 10)
 		}
 	}
@@ -96,7 +98,7 @@ func (o *Genome) crossover(b *Genome) *Genome {
 	return o
 }
 func (o *Genome) addConnection() {
-	if len(o.Connections) > o.MaxConnections {
+	if o.MaxConnections > 0 && len(o.Connections) > o.MaxConnections {
 		return
 	}
 	ins, outs := []int{}, []int{}
@@ -134,7 +136,7 @@ func (o *Genome) addConnection() {
 	}
 }
 func (o *Genome) addNode() {
-	if o.NextNodeID > o.MaxNodes || (o.NextNodeID >= 7 && o.NextNodeID > len(o.Connections)/3) {
+	if o.MaxNodes > 0 && (o.NextNodeID > o.MaxNodes || (o.NextNodeID >= 7 && o.NextNodeID > len(o.Connections)/2)) {
 		return
 	}
 	outs := []*Connection{}
