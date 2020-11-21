@@ -28,7 +28,7 @@ func main() {
 	}
 
 	jsonFile := "neatgo_mnist.json"
-	pop, _ := neatgo.NewPopulation(28/2*28/2, 0, 10, *g, 0.99, &neatgo.Options{
+	pop, _ := neatgo.NewPopulation(28*28, 0, 10, *g, 0.99, &neatgo.Options{
 		KeepWinner:    1,
 		AddNode:       0.2,
 		AddConnection: 0.2,
@@ -181,9 +181,9 @@ func preview(img [][]uint8) {
 }
 
 func getBits(img [][]uint8) []float64 {
-	bits := make([]float64, 28/2*28/2)
+	bits := make([]float64, 28*28)
 	pos := 0
-	img = small(img)
+	// img = small(img)
 	for _, vv := range img {
 		for _, vvv := range vv {
 			bits[pos] = float64(vvv) / 0xff

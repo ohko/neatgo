@@ -65,10 +65,11 @@ var activateFunc = map[string]func(x float64) float64{
 }
 
 func randActivateFunc() string {
+	ids := []string{}
 	for i := range activateFunc {
-		return i
+		ids = append(ids, i)
 	}
-	return "LOGISTIC"
+	return ids[RandIntn(0, len(ids)-1)]
 }
 
 // FeedForwardNetwork ...
