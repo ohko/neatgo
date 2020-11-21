@@ -28,7 +28,7 @@ func (o *Genome) init() {
 		o.NextNodeID++
 	}
 	for j := 0; j < o.Population.outputNumber; j++ {
-		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeOutput, Value: 0}
+		o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeOutput, Value: 0, Activate: "LOGISTIC"}
 
 		if o.Population.Options.AllConnection {
 			for i := 0; i < o.Population.inputNumber; i++ {
@@ -151,7 +151,7 @@ func (o *Genome) addNode() {
 		}
 	}
 
-	o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeHidden, Value: 0}
+	o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeHidden, Value: 0, Activate: randActivateFunc()}
 
 	c := RandIntn(0, len(outs)-1)
 	outs[c].Enabled = false
@@ -190,7 +190,7 @@ func (o *Genome) clone() *Genome {
 	n.NextNodeID = o.NextNodeID
 	n.Fitness = o.Fitness
 	for k, v := range o.Nodes {
-		n.Nodes[k] = &Node{Index: v.Index, Type: v.Type, Value: v.Value}
+		n.Nodes[k] = &Node{Index: v.Index, Type: v.Type, Value: v.Value, Activate: v.Activate}
 	}
 	for _, v := range o.Connections {
 		n.Connections = append(n.Connections, &Connection{
@@ -206,11 +206,12 @@ func (o *Genome) clone() *Genome {
 
 // GetActiveNodeNumber ...
 func (o *Genome) GetActiveNodeNumber() int {
-	nn := 0
-	for range o.Nodes {
-		nn++
-	}
-	return nn
+	return o.NextNodeID
+	// nn := 0
+	// for range o.Nodes {
+	// 	nn++
+	// }
+	// return nn
 }
 
 // GetActiveConnectionNumber ...

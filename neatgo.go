@@ -39,6 +39,38 @@ func sigmoid(x float64) float64 {
 	return (1 / (1 + math.Exp(-x)))
 }
 
+var activateFunc = map[string]func(x float64) float64{
+	"LOGISTIC":        func(x float64) float64 { return 1 / (1 + math.Exp(-x)) },
+	"TANH":            func(x float64) float64 { return math.Tanh(x) },
+	"IDENTITY":        func(x float64) float64 { return x },
+	"STEP":            func(x float64) float64 { return map[bool]float64{true: 1, false: 0}[x > 0] },
+	"RELU":            func(x float64) float64 { return map[bool]float64{true: x, false: 0}[x > 0] },
+	"SOFTSIGN":        func(x float64) float64 { return x / (1 + math.Abs(x)) },
+	"SINUSOID":        func(x float64) float64 { return x / (1 + math.Sin(x)) },
+	"GAUSSIAN":        func(x float64) float64 { return math.Exp(-math.Pow(x, 2)) },
+	"BENT_IDENTITY":   func(x float64) float64 { return (math.Sqrt(math.Pow(x, 2)+1)-1)/2 + x },
+	"BIPOLAR":         func(x float64) float64 { return map[bool]float64{true: 1, false: -1}[x > 0] },
+	"BIPOLAR_SIGMOID": func(x float64) float64 { return 2/(1+math.Exp(-x)) - 1 },
+	"HARD_TANH":       func(x float64) float64 { return math.Max(-1, math.Min(1, x)) },
+	"ABSOLUTE":        func(x float64) float64 { return math.Abs(x) },
+	"INVERSE":         func(x float64) float64 { return 1 - x },
+	"SELU": func(x float64) float64 {
+		alpha := 1.6732632423543772848170429916717
+		scale := 1.0507009873554804934193349852946
+		if x > 0 {
+			return x * scale
+		}
+		return (alpha*math.Exp(x) - alpha) * scale
+	},
+}
+
+func randActivateFunc() string {
+	for i := range activateFunc {
+		return i
+	}
+	return "LOGISTIC"
+}
+
 // FeedForwardNetwork ...
 func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 	outputs := []float64{}
@@ -60,7 +92,8 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 			}
 		}
 
-		genome.Nodes[n].Value = sigmoid(genome.Nodes[n].Value)
+		// genome.Nodes[n].Value = sigmoid(genome.Nodes[n].Value)
+		genome.Nodes[n].Value = activateFunc[genome.Nodes[n].Activate](genome.Nodes[n].Value)
 	}
 
 	// output
@@ -76,7 +109,8 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 			}
 		}
 
-		outputs = append(outputs, sigmoid(genome.Nodes[n].Value))
+		// outputs = append(outputs, sigmoid(genome.Nodes[n].Value))
+		outputs = append(outputs, activateFunc[genome.Nodes[n].Activate](genome.Nodes[n].Value))
 	}
 
 	return outputs

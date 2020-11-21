@@ -9,7 +9,8 @@ const (
 
 // Node ...
 type Node struct {
-	Index int
-	Type  string
-	Value float64 `json:"-"`
+	Index    int
+	Type     string
+	Activate string
+	Value    float64 `json:"-"`
 }

@@ -14,7 +14,7 @@ import (
 
 var (
 	t = flag.Bool("c", false, "Check")
-	n = flag.Int("n", 10, "Train count of every number")
+	n = flag.Int("n", 100, "Train count of every number")
 	g = flag.Int("g", 10, "Genome number")
 )
 
@@ -28,11 +28,12 @@ func main() {
 	}
 
 	jsonFile := "neatgo_mnist.json"
-	pop, _ := neatgo.NewPopulation(28/2*28/2, 100, 10, *g, 0.99, &neatgo.Options{
-		KeepWinner:    0,
+	pop, _ := neatgo.NewPopulation(28/2*28/2, 0, 10, *g, 0.99, &neatgo.Options{
+		KeepWinner:    1,
 		AddNode:       0.2,
 		AddConnection: 0.2,
 		MutateWeight:  0.2,
+		MaxDistance:   2,
 		AllConnection: true,
 	})
 
@@ -55,7 +56,6 @@ func main() {
 	}
 	log.Printf("MNISST test: N:%v | W:%v | H:%v", dataCheck.N, dataCheck.W, dataCheck.H)
 
-	// trainCount := dataTrain.N
 	trainCount := *n
 	if trainCount > dataTrain.N {
 		trainCount = dataTrain.N
@@ -93,7 +93,7 @@ func main() {
 			fmt.Println()
 		}
 		// save
-		if genomes[0].Fitness > maxFitness+0.001 {
+		if genomes[0].Fitness > maxFitness+0.01 {
 			if maxFitness != 0 {
 				ioutil.WriteFile(jsonFile, []byte(genomes[0].ToJSON()), 0644)
 			}
