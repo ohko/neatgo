@@ -54,28 +54,31 @@ func (o *Genome) init() {
 
 		o.NextNodeID++
 	}
+	for i := 0; i < o.Population.hiddenNumber; i++ {
+		o.addNode()
+	}
 }
-func (o *Genome) nextGeneration(n int, stdev float64) {
-	o.mutateWeight(n, stdev)
-	// r := float64(n+1) / float64(o.Population.genomeNumber)
-	// r1, r2, r3, r4 := r, r, r, r
-	div := math.Max(1, o.Population.Options.AddNode+o.Population.Options.RemoveNode+o.Population.Options.AddConnection+o.Population.Options.RemoveConnection)
-	r, r1, r2, r3, r4 := NeatRandom(0, 1), o.Population.Options.AddNode, o.Population.Options.RemoveNode, o.Population.Options.AddConnection, o.Population.Options.RemoveConnection
+func (o *Genome) nextGeneration(n, dis int) {
+	o.mutateWeight(n, dis)
+	if dis < o.Population.Options.MaxDistance {
+		return
+	}
+
+	div := math.Max(1, o.Population.Options.AddNode+o.Population.Options.AddConnection)
+	r, r1, r2 := NeatRandom(0, 1), o.Population.Options.AddNode, o.Population.Options.AddConnection
 	if r < r1/div {
 		o.addNode()
 	} else if r < (r1+r2)/div {
-		o.removeNode()
-	} else if r < (r1+r2+r3)/div {
 		o.addConnection()
-	} else if r < (r1+r2+r3+r4)/div {
-		o.removeConnection()
 	}
 }
-func (o *Genome) mutateWeight(n int, stdev float64) {
+func (o *Genome) mutateWeight(n, dis int) {
+	r := 0.0
 	for i := 0; i < len(o.Connections); i++ {
-		if NeatRandom(0, 1) < 0.01 {
+		r = NeatRandom(0, 1)
+		if r < 0.01 {
 			o.Connections[i].Weight = NeatRandom(-1, 1)
-		} else if NeatRandom(0, 1) < o.Population.Options.MutateWeight {
+		} else if r < o.Population.Options.MutateWeight {
 			o.Connections[i].Weight += NeatRandom(-1, 1) * math.Min(float64(n+1), 10)
 		}
 	}
@@ -113,10 +116,7 @@ func (o *Genome) addConnection() {
 			continue
 		}
 		for out := range o.Nodes {
-			if o.Nodes[out].Type == NodeTypeInput {
-				continue
-			}
-			if out <= in {
+			if o.Nodes[out].Type == NodeTypeInput || out <= in {
 				continue
 			}
 
@@ -143,34 +143,9 @@ func (o *Genome) addConnection() {
 		}
 	}
 }
-func (o *Genome) removeConnection() {
-	if len(o.Connections) < o.Population.outputNumber {
-		return
-	}
-	i := RandIntn(0, len(o.Connections)-1)
-	if o.Nodes[o.Connections[i].Out].Type == NodeTypeOutput {
-		count := o.getConnectionToOutput(o.Connections[i].Out)
-		if count <= 1 {
-			return
-		}
-	}
-	o.Connections = append(o.Connections[:i], o.Connections[i+1:]...)
-}
-func (o *Genome) getConnectionToOutput(n int) int {
-	count := 0
-	for _, c := range o.Connections {
-		if c.Out == n {
-			count++
-		}
-	}
-	return count
-}
 func (o *Genome) addNode() {
 	outs := []*Connection{}
 	for a := range o.Connections {
-		if _, ok := o.Nodes[o.Connections[a].Out]; !ok {
-			continue
-		}
 		if o.Nodes[o.Connections[a].Out].Type == NodeTypeOutput {
 			outs = append(outs, o.Connections[a])
 		}
@@ -198,33 +173,6 @@ func (o *Genome) addNode() {
 	o.Population.nextInnovationID++
 
 	o.NextNodeID++
-}
-func (o *Genome) removeNode() {
-	removeIndex := -1
-	for i := range o.Nodes {
-		if o.Nodes[i].Type != NodeTypeHidden {
-			continue
-		}
-		removeIndex = i
-	}
-	if removeIndex == -1 {
-		return
-	}
-
-	for k := 0; k < len(o.Connections); k++ {
-		if o.Connections[k].In == removeIndex || o.Connections[k].Out == removeIndex {
-			if o.Nodes[o.Connections[k].Out].Type == NodeTypeOutput {
-				count := o.getConnectionToOutput(o.Connections[k].Out)
-				if count <= 1 {
-					return
-				}
-			}
-			o.Connections = append(o.Connections[:k], o.Connections[k+1:]...)
-			k--
-		}
-	}
-
-	delete(o.Nodes, removeIndex)
 }
 
 // ToJSON ...

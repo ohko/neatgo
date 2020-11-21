@@ -28,14 +28,12 @@ func main() {
 	}
 
 	jsonFile := "neatgo_mnist.json"
-	pop, _ := neatgo.NewPopulation(28/2*28/2, 10, *g, 0.99, &neatgo.Options{
-		KeepWinner:       1,
-		AddNode:          0.2,
-		RemoveNode:       0.2,
-		AddConnection:    0.2,
-		RemoveConnection: 0.2,
-		MutateWeight:     0.2,
-		AllConnection:    true,
+	pop, _ := neatgo.NewPopulation(28/2*28/2, 100, 10, *g, 0.99, &neatgo.Options{
+		KeepWinner:    0,
+		AddNode:       0.2,
+		AddConnection: 0.2,
+		MutateWeight:  0.2,
+		AllConnection: true,
 	})
 
 	if *t {
@@ -207,9 +205,17 @@ func resultChk(pop *neatgo.Population, jsonFile string) {
 	}
 	log.Printf("MNISST test: N:%v | W:%v | H:%v", dataCheck.N, dataCheck.W, dataCheck.H)
 
+	checkCount := *n
+	if checkCount > dataCheck.N {
+		checkCount = dataCheck.N
+	}
+	if checkCount <= 0 {
+		checkCount = 1
+	}
+
 	dataCheckSet := [][][]float64{}
 	for k, v := range dataCheck.Data {
-		if k >= dataCheck.N {
+		if k >= checkCount {
 			break
 		}
 		bits := getBits(v.Image)
@@ -231,5 +237,5 @@ func resultChk(pop *neatgo.Population, jsonFile string) {
 		}
 	}
 
-	fmt.Printf("[check]count: %d/%d right: %d (%.3f%%)\n", len(dataCheckSet), dataCheck.N, right, float64(right)/float64(len(dataCheckSet))*100)
+	fmt.Printf("[check]fitness: %.2f%% right: %d/%d (%.3f%%)\n", genome.Fitness*100, right, len(dataCheckSet), float64(right)/float64(len(dataCheckSet))*100)
 }

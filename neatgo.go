@@ -2,7 +2,6 @@ package neatgo
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -13,25 +12,23 @@ import (
 
 // Options ...
 type Options struct {
-	KeepWinner       int
-	AddNode          float64
-	RemoveNode       float64
-	AddConnection    float64
-	RemoveConnection float64
-	MutateWeight     float64
-	AllConnection    bool
+	KeepWinner    int
+	AddNode       float64
+	AddConnection float64
+	MutateWeight  float64
+	MaxDistance   int
+	AllConnection bool
 }
 
 // DefaultOptions ...
 func DefaultOptions() *Options {
 	return &Options{
-		KeepWinner:       0,
-		AddNode:          0.2,
-		RemoveNode:       0.2,
-		AddConnection:    0.2,
-		RemoveConnection: 0.2,
-		MutateWeight:     0.2,
-		AllConnection:    true,
+		KeepWinner:    0,
+		AddNode:       0.2,
+		AddConnection: 0.2,
+		MutateWeight:  0.2,
+		MaxDistance:   2,
+		AllConnection: true,
 	}
 }
 
@@ -52,9 +49,6 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 	// hidden
 	for n := 0; n < genome.NextNodeID; n++ {
-		if _, ok := genome.Nodes[n]; !ok {
-			continue
-		}
 		if genome.Nodes[n].Type != NodeTypeHidden {
 			continue
 		}
@@ -62,16 +56,6 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 		for _, c := range genome.Connections {
 			if c.Enabled && c.Out == n {
-				if _, ok := genome.Nodes[c.In]; !ok {
-					continue
-				}
-				if _, ok := genome.Nodes[c.Out]; !ok {
-					continue
-				}
-				if genome.Nodes[c.In] == nil || genome.Nodes[c.Out] == nil {
-					fmt.Println(genome.Nodes[c.In])
-					fmt.Println(genome.Nodes[c.Out])
-				}
 				genome.Nodes[c.Out].Value += genome.Nodes[c.In].Value * c.Weight
 			}
 		}
@@ -81,9 +65,6 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 	// output
 	for n := 0; n < genome.NextNodeID; n++ {
-		if _, ok := genome.Nodes[n]; !ok {
-			continue
-		}
 		if genome.Nodes[n].Type != NodeTypeOutput {
 			continue
 		}
@@ -91,12 +72,6 @@ func FeedForwardNetwork(genome *Genome, inputs []float64) []float64 {
 
 		for _, c := range genome.Connections {
 			if c.Enabled && c.Out == n {
-				if _, ok := genome.Nodes[c.In]; !ok {
-					continue
-				}
-				if _, ok := genome.Nodes[c.Out]; !ok {
-					continue
-				}
 				genome.Nodes[c.Out].Value += genome.Nodes[c.In].Value * c.Weight
 			}
 		}

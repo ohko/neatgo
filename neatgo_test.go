@@ -47,7 +47,7 @@ func TestXOR(t *testing.T) {
 		wg.Wait()
 	}
 
-	pop, _ := NewPopulation(2, 1, 10, 4, nil)
+	pop, _ := NewPopulation(2, 0, 1, 10, 4, nil)
 	winner := pop.Run(fitnessFunction, -1, "")
 	// fmt.Println(winner.ToJSON())
 	// ioutil.WriteFile("neatgo_xor.json", []byte(winner.ToJSON()), 0644)

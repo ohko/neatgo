@@ -8,6 +8,7 @@ import (
 // Population ...
 type Population struct {
 	inputNumber      int
+	hiddenNumber     int
 	outputNumber     int
 	genomeNumber     int
 	fitnessThreshold float64
@@ -19,7 +20,7 @@ type Population struct {
 }
 
 // NewPopulation ...
-func NewPopulation(inputNumber, outputNumber, genomeNumber int, fitnessThreshold float64, options *Options) (*Population, error) {
+func NewPopulation(inputNumber, hiddenNumber, outputNumber, genomeNumber int, fitnessThreshold float64, options *Options) (*Population, error) {
 	if genomeNumber < 5 {
 		genomeNumber = 5
 	}
@@ -28,6 +29,7 @@ func NewPopulation(inputNumber, outputNumber, genomeNumber int, fitnessThreshold
 	}
 	o := &Population{
 		inputNumber:      inputNumber,
+		hiddenNumber:     hiddenNumber,
 		outputNumber:     outputNumber,
 		genomeNumber:     genomeNumber,
 		fitnessThreshold: fitnessThreshold,
@@ -44,11 +46,11 @@ func (o *Population) Run(fitnessFunction FitnessFunction, generations int, initJ
 	if generations < 0 {
 		generations = math.MaxInt32
 	}
-	dis, last, top := 0, 0.0, 0
+	dis, last, keep := 0, 0.0, 0
 	for n := 0; n < generations; n++ {
 		fitnessFunction(o.genomes, n, o)
 
-		o.sortWinners(top)
+		o.sortWinners(keep)
 		if n+1 == generations {
 			break
 		}
@@ -56,17 +58,17 @@ func (o *Population) Run(fitnessFunction FitnessFunction, generations int, initJ
 			break
 		}
 
-		if last != o.Winners[0].Fitness {
-			top = o.Options.KeepWinner
+		if last < o.Winners[0].Fitness {
+			keep = o.Options.KeepWinner
 			dis = 0
 		} else {
 			dis++
 		}
-		if dis > 5 {
-			top = 0
+		if dis > o.Options.MaxDistance {
+			keep = 0
 		}
 		last = o.Winners[0].Fitness
-		o.next()
+		o.next(dis)
 	}
 
 	return o.Winners[0]
@@ -94,7 +96,7 @@ func (o *Population) sortWinners(n int) {
 	sort.Sort(sort.Reverse(o.Winners))
 	o.Winners = o.Winners[:4]
 }
-func (o *Population) next() {
+func (o *Population) next(dis int) {
 	// sum := 0.0
 	// for i := range o.genomes {
 	// 	sum += math.Pow(o.fitnessThreshold-o.genomes[i].Fitness, 2)
@@ -115,6 +117,6 @@ func (o *Population) next() {
 		} else {
 			o.genomes[i] = o.Winners[RandIntn(0, 3)].clone()
 		}
-		o.genomes[i].nextGeneration(i, 0)
+		o.genomes[i].nextGeneration(i, dis)
 	}
 }
