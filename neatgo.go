@@ -17,6 +17,7 @@ type Options struct {
 	AddConnection float64
 	MutateWeight  float64
 	MaxDistance   int
+	MaxNode       int
 	AllConnection bool
 }
 
@@ -28,6 +29,7 @@ func DefaultOptions() *Options {
 		AddConnection: 0.2,
 		MutateWeight:  0.2,
 		MaxDistance:   2,
+		MaxNode:       10,
 		AllConnection: true,
 	}
 }

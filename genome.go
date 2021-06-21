@@ -144,6 +144,9 @@ func (o *Genome) addConnection() {
 	}
 }
 func (o *Genome) addNode() {
+	if len(o.Nodes) > o.Population.Options.MaxNode {
+		return
+	}
 	outs := []*Connection{}
 	for a := range o.Connections {
 		if o.Nodes[o.Connections[a].Out].Type == NodeTypeOutput {
