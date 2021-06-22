@@ -90,8 +90,8 @@ func (o *Genome) crossover(b *Genome) *Genome {
 				continue
 			}
 
-			o.Connections[m].Enabled = true
-			b.Connections[n].Enabled = true
+			// o.Connections[m].Enabled = true
+			// b.Connections[n].Enabled = true
 
 			if !o.Connections[m].Enabled || !b.Connections[n].Enabled {
 				if NeatRandom(0, 1) < 0.75 {
@@ -154,7 +154,8 @@ func (o *Genome) addNode() {
 		}
 	}
 
-	o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeHidden, Value: 0, Activate: randActivateFunc()}
+	o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeHidden, Value: 0, Activate: "LOGISTIC"}
+	// o.Nodes[o.NextNodeID] = &Node{Index: o.NextNodeID, Type: NodeTypeHidden, Value: 0, Activate: randActivateFunc()}
 
 	c := RandIntn(0, len(outs)-1)
 	outs[c].Enabled = false
@@ -167,9 +168,10 @@ func (o *Genome) addNode() {
 	})
 	o.Population.nextInnovationID++
 	o.Connections = append(o.Connections, &Connection{
-		In:         o.NextNodeID,
-		Out:        outs[c].Out,
-		Weight:     NeatRandom(-1, 1),
+		In:  o.NextNodeID,
+		Out: outs[c].Out,
+		// Weight:     NeatRandom(-1, 1),
+		Weight:     outs[c].Weight,
 		Enabled:    true,
 		Innovation: o.Population.nextInnovationID,
 	})
